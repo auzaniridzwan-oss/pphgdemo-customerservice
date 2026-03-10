@@ -18,7 +18,7 @@
  */
 export default async function handler(req, res) {
   // #region agent log
-  fetch('http://127.0.0.1:7806/ingest/e6e7e66d-84dd-40c9-a626-095e58f23f82',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1f530b'},body:JSON.stringify({sessionId:'1f530b',location:'[...path].js:19',message:'FUNCTION INVOKED',data:{method:req.method,url:req.url,path:req.query?.path,hasApiKey:!!process.env.BRAZE_API_KEY,hasEndpoint:!!process.env.BRAZE_REST_ENDPOINT},timestamp:Date.now(),hypothesisId:'H-A,H-B,H-C,H-D',runId:'run1'})}).catch(()=>{});
+  console.log('[DEBUG:1f530b] FUNCTION INVOKED', JSON.stringify({method:req.method,url:req.url,path:req.query?.path,hasApiKey:!!process.env.BRAZE_API_KEY,hasEndpoint:!!process.env.BRAZE_REST_ENDPOINT,ts:Date.now()}));
   // #endregion
 
   if (req.method !== 'POST') {
@@ -42,7 +42,7 @@ export default async function handler(req, res) {
     : pathSegments;
 
   // #region agent log
-  fetch('http://127.0.0.1:7806/ingest/e6e7e66d-84dd-40c9-a626-095e58f23f82',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1f530b'},body:JSON.stringify({sessionId:'1f530b',location:'[...path].js:46',message:'ENDPOINT RESOLVED',data:{brazeEndpoint,pathSegments},timestamp:Date.now(),hypothesisId:'H-A,H-C',runId:'run1'})}).catch(()=>{});
+  console.log('[DEBUG:1f530b] ENDPOINT RESOLVED', JSON.stringify({brazeEndpoint,pathSegments,ts:Date.now()}));
   // #endregion
 
   const ALLOWED_ENDPOINTS = ['users/export/ids', 'users/track'];
