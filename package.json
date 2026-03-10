@@ -1,0 +1,11 @@
+{
+  "name": "pphg-customerservice-commandcenter",
+  "version": "1.0.0",
+  "description": "Customer Service Command Center — Pan Pacific Hotel Group. Braze WebSDK demo with Vercel serverless proxy.",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "UNLICENSED",
+  "private": true
+}
