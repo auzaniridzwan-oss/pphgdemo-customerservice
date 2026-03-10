@@ -1,0 +1,63 @@
+---
+alwaysApply: true
+description: Standards for managing LocalStorage, session state, and key naming conventions
+globs: ["**/*.js", "index.html", "**/services/storage.js"]
+---
+
+# Local Storage & Session Management
+
+## 1. Key Naming Convention
+- **Prefix:** All keys must be prefixed with `ar_app_` to avoid collisions with third-party scripts (e.g., Braze, Flowbite).
+- **Casing:** Use `snake_case` for the remainder of the key.
+- **Example Keys:**
+    - `ar_app_user_session`
+    - `ar_app_theme_mode`
+    - `ar_app_braze_init_status`
+
+## 2. Centralized Storage Pattern
+- Do NOT use `localStorage.getItem()` directly in UI components.
+- **Requirement:** Use a singleton `StorageManager` class to gatekeep all disk I/O. This allows for easy migration to `IndexedDB` or `SessionStorage` later if needed.
+
+## 3. Data Integrity & Security
+- **JSON Handling:** Always wrap `JSON.parse()` in a `try/catch` block to handle corrupted strings.
+- **Type Safety:** The Storage Manager should return default values (e.g., `[]` or `{}`) if a key is missing to prevent `null` pointer errors in the UI.
+- **Sensitive Data:** Never store PII (Personally Identifiable Information) or plain-text passwords. Store only tokens or non-sensitive preferences.
+
+## 4. State Persistence Logic
+- **Sync with UI:** When a state changes (e.g., a notification is dismissed), update the LocalStorage immediately.
+- **Braze Synergy:** On app load, check `ar_app_user_id`. If it exists, call `braze.changeUser(id)` to ensure the SDK session aligns with the local session.
+
+## 5. Storage Manager Blueprint (JS)
+```javascript
+const StorageManager = {
+    PREFIX: 'ar_app_',
+    
+    set(key, value) {
+        try {
+            const serializedValue = JSON.stringify(value);
+            localStorage.setItem(`${this.PREFIX}${key}`, serializedValue);
+        } catch (e) {
+            console.error('[Storage] Error saving to disk', e);
+        }
+    },
+
+    get(key, defaultValue = null) {
+        try {
+            const item = localStorage.getItem(`${this.PREFIX}${key}`);
+            return item ? JSON.parse(item) : defaultValue;
+        } catch (e) {
+            return defaultValue;
+        }
+    },
+
+    remove(key) {
+        localStorage.removeItem(`${this.PREFIX}${key}`);
+    },
+
+    clearSession() {
+        // Only clear app-specific keys, leave Braze/System keys intact
+        Object.keys(localStorage)
+            .filter(k => k.startsWith(this.PREFIX))
+            .forEach(k => localStorage.removeItem(k));
+    }
+};

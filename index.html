@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Braze User Profile Editor — Pan Pacific Hotel Group</title>
+  <meta name="description" content="Customer Service Command Center powered by Braze — Pan Pacific Hotel Group" />
+
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Flowbite CSS CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.css" />
+
+  <!-- FontAwesome Kit -->
+  <script src="https://kit.fontawesome.com/a21f98a3f6.js" crossorigin="anonymous" defer></script>
+
+  <!-- App Custom Styles -->
+  <link rel="stylesheet" href="./css/custom.css" />
+
+  <!-- Tailwind config for custom theme colours -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: { DEFAULT: '#612BBD', light: '#7C3AED', dark: '#4C1D95' },
+            accent: { DEFAULT: '#00D1FF' },
+            aicolor: { DEFAULT: '#8B5CF6' },
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <!--
+    Runtime configuration — on Vercel these values are replaced at build
+    time via environment variables. Locally, leave them empty to activate
+    Demo Mode automatically.
+  -->
+  <script>
+    window.__APP_CONFIG__ = {
+      BRAZE_API_KEY: '8cdf39cc-1a02-449c-b125-1b2f9bd4fb0b',   /* replaced by Vercel env: BRAZE_API_KEY       */
+      BRAZE_REST_ENDPOINT: 'https://rest.iad-03.braze.com',   /* replaced by Vercel env: BRAZE_REST_ENDPOINT */
+    };
+  </script>
+</head>
+
+<body>
+  <!-- ================================================================
+       App Shell — rendered once on load, content injected by JS
+       ================================================================ -->
+  <div id="app-shell">
+
+    <!-- Sidebar -->
+    <nav id="sidebar" aria-label="Main Navigation">
+      <!-- Logo mark -->
+      <div class="sidebar-item" style="margin-bottom:8px; background: rgba(97,43,189,0.3);">
+        <i class="fa-solid fa-star" aria-hidden="true" style="color:#00D1FF;"></i>
+      </div>
+
+      <div style="flex:1; display:flex; flex-direction:column; gap:4px; width:100%; padding: 0 10px;">
+        <a href="#/users/DEMO-001" class="sidebar-item active" data-nav="users" title="Customer Profiles"
+          aria-label="Customer Profiles">
+          <i class="fa-solid fa-users" aria-hidden="true"></i>
+        </a>
+        <a href="#" class="sidebar-item" data-nav="campaigns" title="Campaigns" aria-label="Campaigns">
+          <i class="fa-solid fa-bullhorn" aria-hidden="true"></i>
+        </a>
+        <a href="#" class="sidebar-item" data-nav="analytics" title="Analytics" aria-label="Analytics">
+          <i class="fa-solid fa-chart-line" aria-hidden="true"></i>
+        </a>
+        <a href="#" class="sidebar-item" data-nav="segments" title="Segments" aria-label="Segments">
+          <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+        </a>
+      </div>
+
+      <!-- Bottom actions -->
+      <div style="display:flex; flex-direction:column; gap:4px; padding: 0 10px;">
+        <button class="sidebar-item" id="toggle-mock-btn" title="Toggle Demo/Live Mode"
+          aria-label="Toggle Demo/Live Mode">
+          <i class="fa-solid fa-flask" aria-hidden="true"></i>
+        </button>
+        <a href="#" class="sidebar-item" title="Settings" aria-label="Settings">
+          <i class="fa-solid fa-gear" aria-hidden="true"></i>
+        </a>
+        <a href="#" class="sidebar-item" title="Agent Profile" aria-label="Agent Profile">
+          <i class="fa-solid fa-circle-user" aria-hidden="true"></i>
+        </a>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div id="main-content">
+      <!-- Global Header (rendered by GlobalHeader.js) -->
+      <header id="global-header"></header>
+
+      <!-- Page Content (rendered by Router → Page components) -->
+      <main id="page-content" role="main" aria-live="polite"></main>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" aria-live="assertive" aria-atomic="true"></div>
+
+  <!-- ================================================================
+       Ky HTTP Client (ESM-compatible CDN build)
+       ================================================================ -->
+  <script type="importmap">
+    {
+      "imports": {
+        "ky": "https://esm.sh/ky@1.2.3"
+      }
+    }
+  </script>
+
+  <!-- ================================================================
+       Application Bootstrap (ES Modules)
+       ================================================================ -->
+  <script type="module">
+    import './js/core/StorageManager.js';  // Sets window.StorageManager (used by app.config.js)
+    import { AppLogger } from './js/core/AppLogger.js';
+    import { Router } from './js/core/Router.js';
+    import { GlobalHeader } from './js/components/GlobalHeader.js';
+    import { Sidebar } from './js/components/Sidebar.js';
+
+    AppLogger.info('[SYSTEM]', 'App bootstrap started', { version: window.__APP_CONFIG__ });
+
+    // Render persistent chrome
+    GlobalHeader.render();
+    Sidebar.init();
+
+    // Start the router — handles initial hash and listens for changes
+    Router.init();
+
+    AppLogger.info('[SYSTEM]', 'App bootstrap complete');
+  </script>
+
+  <!-- Flowbite JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js" defer></script>
+</body>
+
+</html>

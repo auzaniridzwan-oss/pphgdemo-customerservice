@@ -1,0 +1,32 @@
+---
+alwaysApply: true
+description: High-level project objectives, target audience, and design philosophy to guide implementation
+globs: ["**/*"]
+---
+
+# Project Objectives & Strategic Context
+
+## 1. Primary Objective
+- **Purpose:** To create a high-fidelity "Mobile App" experience within a web browser for demonstrating advanced **Braze WebSDK** integrations.
+- **Goal:** Showcase seamless marketing orchestration (In-App Messages, Content Cards, and Event Triggering) within a realistic mobile UI (iPhone Frame).
+
+## 2. Design Philosophy: "The Native Illusion"
+- **Fidelity:** The web app must look and feel like a native iOS application. 
+- **Constraints:** All interactions must be contained within the 390x844px `#phone-frame`. (Except for Debug Overlay).
+- **UX Priority:** Smooth transitions, haptic-like feedback (scale transforms), and zero-latency UI updates are mandatory.
+- **Tech Stack Choice:** Flowbite is used to provide production-ready components that mimic native UI patterns without the overhead of heavy frameworks.
+
+## 3. Implementation Priorities
+- **Braze-First Logic:** Code should be structured to make marketing data (User Attributes/Events) the primary driver of the UI state.
+- **Observability:** Because this is a demonstration tool, "invisible" SDK actions must be made "visible" via the `AppLogger` and the Developer Debug Overlay.
+- **Portability:** The project must be optimized for **Vercel** to allow for instant sharing with stakeholders via mobile browsers.
+
+## 4. Target User Scenarios
+- **Scenario A (Stakeholder Demo):** A user opens the Vercel link on a desktop. They see the iPhone frame. They trigger an event, and a Braze In-App Message appears *inside* the phone frame perfectly.
+- **Scenario B (Mobile Testing):** A user opens the Vercel link on an actual smartphone. The `#phone-frame` styling should gracefully adapt or hide to show the "App" full-screen.
+- **Scenario C (Technical Audit):** A developer opens the "SDK Debugger" to verify that specific Custom Attributes (e.g., `user_1978_test`) are syncing correctly after a "Mock Login."
+
+## 5. Success Metrics for Code Generation
+- **Accuracy:** Does the code respect the `var(--safe-top)` and `var(--safe-bottom)` constants?
+- **Integrity:** Are Braze calls safely wrapped to prevent UI crashes if the SDK is blocked?
+- **Clarity:** Is the `README.md` updated to reflect new features or integrated Braze events?

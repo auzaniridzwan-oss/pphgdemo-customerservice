@@ -1,0 +1,56 @@
+---
+alwaysApply: true
+description: Standards for Tailwind CSS, SCSS, and modern CSS variables for a mobile-first UI
+globs: ["**/*.css", "**/*.scss", "index.html", "**/styles/*.css"]
+---
+
+# Styling & Theme Architecture
+
+## 1. Hybrid Styling Strategy
+- **Utility-First:** Use **Tailwind CSS** for 90% of layout, spacing, and typography to ensure Vercel's build-time optimization is maximized.
+- **Custom SCSS/CSS:** Use custom CSS only for the `#phone-frame` hardware mockup and complex animations (e.g., Braze In-App Message transitions).
+- **Compatibility:** Ensure all outputs are standard CSS3 compatible for native browser rendering on Vercel.
+
+## 2. Global Variables (Design Tokens)
+Define all brand and layout tokens in a `:root` block using modern CSS variables.
+- **Colors:** Use Flowbite's palette (e.g., `primary-600`) as the base.
+- **Dimensions:** - `--phone-w: 390px`
+    - `--phone-h: 844px`
+    - `--safe-t: 47px` (Notch)
+    - `--safe-b: 34px` (Home Indicator)
+
+## 3. The "Glassmorphism" Pattern
+To mimic iOS native feels, use the following Tailwind pattern for headers and navigation:
+- `bg-white/80 backdrop-blur-md border-gray-200/50`.
+
+## 4. Mobile-First CSS Best Practices
+- **Touch Targets:** Any interactive element (buttons, links) must have a minimum `min-h-[44px]` and `min-w-[44px]`.
+- **Text Selection:** Disable selection on UI chrome using `select-none`.
+- **Scrolling:** Always use `overscroll-behavior-y: contain` on the `#app-content` to prevent the "rubber-band" effect from moving the entire `#phone-frame`.
+
+## 5. CSS Blueprint (SCSS/CSS Entry)
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-100 flex items-center justify-center min-h-screen antialiased text-gray-900;
+  }
+}
+
+@layer components {
+  /* iPhone Mockup Core */
+  .iphone-container {
+    @apply relative overflow-hidden bg-white shadow-2xl border-[12px] border-gray-900;
+    width: var(--phone-w);
+    height: var(--phone-h);
+    border-radius: 3rem;
+  }
+
+  /* Interaction feedback for mobile */
+  .tap-highlight {
+    @apply active:opacity-70 active:scale-95 transition-all duration-150 ease-in-out;
+  }
+}

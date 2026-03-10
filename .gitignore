@@ -1,0 +1,14 @@
+# Environment — never commit live keys
+.env
+.env.local
+.env.*.local
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+*.swp
+
+# Vercel
+.vercel/
