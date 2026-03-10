@@ -4,8 +4,11 @@
  * Singleton HTTP client for all Braze REST API interactions.
  * Built on top of Ky (https://github.com/sindresorhus/ky).
  *
+ * All requests are routed through the Vercel serverless proxy at /api/braze/
+ * so that the Braze API key never leaves the server. The Authorization header
+ * is injected by the proxy function (api/braze/[...path].js), not here.
+ *
  * Features:
- *  - Centralised Authorization header management
  *  - Exponential backoff retry for 5xx / network errors (max 3 attempts)
  *  - Standardised ApiError wrapping for all non-2xx responses
  *  - A single Ky instance ensures global header/connection reuse
@@ -70,21 +73,19 @@ let _instance = null;
 
 export const BrazeClient = {
   /**
-   * Returns (or creates) the singleton Ky instance configured for the
-   * Braze REST endpoint.  Call this before any request.
+   * Returns (or creates) the singleton Ky instance configured to route
+   * requests through the Vercel serverless proxy at /api/braze/.
+   * No API key is needed here — the proxy injects it server-side.
    *
-   * @param {string} apiKey       - Braze REST API key
-   * @param {string} restEndpoint - Base URL, e.g. https://rest.iad-01.braze.com
    * @returns {import('ky').KyInstance}
    */
-  getInstance(apiKey, restEndpoint) {
+  getInstance() {
     if (_instance) return _instance;
 
     _instance = ky.create({
-      prefixUrl: restEndpoint.replace(/\/$/, ''),
+      prefixUrl: '/api/braze/',
       headers: {
-        'Content-Type':  'application/json',
-        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
       },
       timeout: 15_000,
       retry: {
@@ -113,7 +114,6 @@ export const BrazeClient = {
               let body = {};
               try { body = await response.clone().json(); } catch { /* empty */ }
 
-              // Attach enriched info to the error so repository catch blocks can use it
               error._brazeErrors  = body.errors || (body.message ? [body.message] : []);
               error._traceId      = response.headers.get('x-request-id') || '';
               error._humanMessage = _humanMessage(response.status, body);
@@ -130,7 +130,7 @@ export const BrazeClient = {
       },
     });
 
-    AppLogger.info('[API]', 'BrazeClient instance created', { endpoint: restEndpoint });
+    AppLogger.info('[API]', 'BrazeClient instance created', { proxy: '/api/braze/' });
     return _instance;
   },
 

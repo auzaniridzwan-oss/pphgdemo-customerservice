@@ -122,7 +122,7 @@ export const GlobalHeader = {
     const cfg = window.__APP_CONFIG__ || {};
     const manualMock = StorageManager.get('mock_mode', false);
     if (manualMock) return false;
-    return !!(cfg.BRAZE_API_KEY && cfg.BRAZE_REST_ENDPOINT);
+    return !!cfg.BRAZE_REST_ENDPOINT;
   },
 
   /**

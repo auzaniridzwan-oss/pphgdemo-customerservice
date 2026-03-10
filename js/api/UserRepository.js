@@ -74,7 +74,7 @@ export const UserRepository = {
     try {
       AppLogger.info('[API]', `Fetching profile for ${externalId}`);
 
-      const client = BrazeClient.getInstance(config.BRAZE_API_KEY, config.BRAZE_REST_ENDPOINT);
+      const client = BrazeClient.getInstance();
 
       const response = await client.post('users/export/ids', {
         json: {
@@ -139,7 +139,7 @@ export const UserRepository = {
     try {
       AppLogger.info('[API]', `Searching Braze for email: ${email}`);
 
-      const client = BrazeClient.getInstance(config.BRAZE_API_KEY, config.BRAZE_REST_ENDPOINT);
+      const client = BrazeClient.getInstance();
 
       const response = await client.post('users/export/ids', {
         json: {
@@ -195,7 +195,7 @@ export const UserRepository = {
     try {
       AppLogger.info('[API]', `Updating attributes for ${externalId}`, payload);
 
-      const client = BrazeClient.getInstance(config.BRAZE_API_KEY, config.BRAZE_REST_ENDPOINT);
+      const client = BrazeClient.getInstance();
 
       await client.post('users/track', {
         json: { attributes: [payload] },
@@ -247,7 +247,7 @@ export const UserRepository = {
     }
 
     try {
-      const client = BrazeClient.getInstance(config.BRAZE_API_KEY, config.BRAZE_REST_ENDPOINT);
+      const client = BrazeClient.getInstance();
 
       await client.post('users/track', {
         json: { events: [eventPayload] },

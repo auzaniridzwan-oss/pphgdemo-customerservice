@@ -43,13 +43,16 @@
   </script>
 
   <!--
-    Runtime configuration — on Vercel these values are replaced at build
-    time via environment variables. Locally, leave them empty to activate
+    Runtime configuration — on Vercel, BRAZE_REST_ENDPOINT is replaced at
+    build time via an environment variable. Leave it empty locally to activate
     Demo Mode automatically.
+
+    SECURITY: BRAZE_API_KEY is intentionally absent here. It is a server-side
+    secret held only in Vercel environment variables, accessed exclusively by
+    the serverless proxy at /api/braze/. Never add it to this block.
   -->
   <script>
     window.__APP_CONFIG__ = {
-      BRAZE_API_KEY: '8cdf39cc-1a02-449c-b125-1b2f9bd4fb0b',   /* replaced by Vercel env: BRAZE_API_KEY       */
       BRAZE_REST_ENDPOINT: 'https://rest.iad-03.braze.com',   /* replaced by Vercel env: BRAZE_REST_ENDPOINT */
     };
   </script>
