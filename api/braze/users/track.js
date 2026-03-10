@@ -8,10 +8,6 @@
  * @param {import('@vercel/node').VercelResponse} res
  */
 export default async function handler(req, res) {
-  // #region agent log
-  console.log('[DEBUG:1f530b] users/track INVOKED', JSON.stringify({method:req.method,hasApiKey:!!process.env.BRAZE_API_KEY,hasEndpoint:!!process.env.BRAZE_REST_ENDPOINT,ts:Date.now()}));
-  // #endregion
-
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed. Use POST.' });
   }
@@ -29,10 +25,6 @@ export default async function handler(req, res) {
   const targetUrl = `${BRAZE_REST_ENDPOINT.replace(/\/$/, '')}/users/track`;
 
   try {
-    // #region agent log
-    console.log('[DEBUG:1f530b] users/track FORWARDING to Braze', JSON.stringify({targetUrl,ts:Date.now()}));
-    // #endregion
-
     const brazeResponse = await fetch(targetUrl, {
       method:  'POST',
       headers: {
@@ -43,10 +35,6 @@ export default async function handler(req, res) {
     });
 
     const responseBody = await brazeResponse.text();
-
-    // #region agent log
-    console.log('[DEBUG:1f530b] users/track BRAZE RESPONDED', JSON.stringify({status:brazeResponse.status,ts:Date.now()}));
-    // #endregion
 
     res.status(brazeResponse.status);
     res.setHeader('Content-Type', 'application/json');
