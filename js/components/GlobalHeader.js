@@ -31,7 +31,16 @@ export const GlobalHeader = {
     _headerEl.innerHTML = `
       <!-- Breadcrumb -->
       <div id="header-breadcrumb" style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
-        <span style="font-weight:600; font-size:13px; color:var(--color-text-secondary);">CS Command Center</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <img
+            src="./images/pphg_logo_sq.png"
+            alt="Pan Pacific Hotel Group"
+            width="32"
+            height="32"
+            style="display:block; object-fit:contain; flex-shrink:0;"
+          />
+          <span style="font-weight:600; font-size:13px; color:var(--color-text-secondary);">PPHG Front Desk</span>
+        </div>
         <i class="fa-solid fa-chevron-right" aria-hidden="true" style="font-size:10px; color:var(--color-text-secondary); opacity:0.5;"></i>
         <span id="breadcrumb-page" style="font-weight:600; font-size:13px; color:var(--color-text-primary);">
           Customer Profiles
