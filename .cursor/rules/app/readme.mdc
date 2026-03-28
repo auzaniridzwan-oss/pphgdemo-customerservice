@@ -8,14 +8,14 @@ globs: ["README.md"]
 
 ## 1. Project Identity
 - **Title:** The name of the application.
-- **Sub-title:** Explicitly state: "A Mobile-First Web Application with iPhone Frame Layout."
+- **Sub-title:** Explicitly state: "Braze Customer Profile Editor"
 
 ## 2. Required Sections
 - **Overview:** 2-3 sentences on the app's purpose.
 - **Tech Stack:**
-    - **UI:** HTML5, CSS3 (Custom iPhone Frame), Flowbite.
-    - **Icons:** FontAwesome (Kit: a21f98a3f6).
-    - **Marketing:** Braze WebSDK Integration.
+    - **UI:** HTML5, CSS3, Flowbite.
+    - **Icons:** FontAwesome
+    - **Marketing:** Braze REST API Integration.
     - **Hosting:** Vercel.
 - **Setup Instructions:**
     - Git Repo: [auzaniridzwan-oss](https://github.com/auzaniridzwan-oss)
@@ -24,10 +24,9 @@ globs: ["README.md"]
 
 ## 3. Braze Integration Details
 - Document the specific Custom Events and User Attributes tracked in this project.
-- Provide a link to the official [Braze WebSDK Docs](https://www.braze.com/docs/developer_guide/sdk_integration/?sdktab=web).
+- Provide a link to the official [Braze REST API Docs](https://www.braze.com/docs/api/home).
 
 ## 4. Visual Layout Reference
-- Include a brief description of the `#phone-frame` container and how the app content is injected into it.
 Best Practices for Documentation
 "Why," not "What": Code explains what is happening. Your documentation should explain why a specific decision was made (e.g., "We wrap this in a try-catch because the Braze SDK might be blocked by browser extensions").
 

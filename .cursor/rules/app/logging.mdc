@@ -6,13 +6,16 @@ globs: ["**/*.js", "index.html", "**/services/logger.js"]
 
 # Centralized Logging & Observability
 
+# Log Library
+- Use loglevel (https://github.com/pimterry/loglevel) as the main logging library.
+
 ## 1. Logging Pattern
 - **Format:** `[TIMESTAMP] [CATEGORY] [LEVEL]: Message | Data`
 - **Levels:** - `INFO`: General app flow (e.g., "App Started").
-    - `DEBUG`: Verbose technical details (e.g., "Braze SDK Payload").
+    - `DEBUG`: Verbose technical details (e.g., "Braze API Payload").
     - `WARN`: Non-breaking issues (e.g., "Image failed to load").
     - `ERROR`: Breaking failures (e.g., "API 500").
-- **Categories:** `[UI]`, `[SDK]`, `[AUTH]`, `[STORAGE]`, `[SYSTEM]`.
+- **Categories:** `[UI]`, `[API]`, `[AUTH]`, `[STORAGE]`, `[SYSTEM]`.
 
 ## 2. Centralized Logger Class
 - **Requirement:** All logs must pass through a singleton `AppLogger`.
@@ -22,42 +25,3 @@ globs: ["**/*.js", "index.html", "**/services/logger.js"]
 - **Console Output:** Use CSS styling in `console.log` for better readability in browser dev tools.
 - **External Export:** Implement a `getLogs()` method that returns a JSON array of the last 50 logs for export to support or a remote viewer.
 - **Braze Integration:** Critical `ERROR` logs should be sent to Braze as a Custom Event: `App_Error` with the error message as a property.
-
-## 4. Logger Blueprint (JS)
-```javascript
-const AppLogger = {
-    logs: [],
-    MAX_LOGS: 100,
-    DEBUG_MODE: window.location.hostname === 'localhost',
-
-    log(level, category, message, data = null) {
-        const timestamp = new Date().toISOString();
-        const logEntry = { timestamp, level, category, message, data };
-        
-        this.logs.push(logEntry);
-        if (this.logs.length > this.MAX_LOGS) this.logs.shift();
-
-        if (this.DEBUG_MODE || level === 'ERROR') {
-            const color = this.getColor(level);
-            console.log(
-                `%c[${timestamp}] [${category}] [${level}]: ${message}`,
-                `color: ${color}; font-weight: bold;`,
-                data || ''
-            );
-        }
-    },
-
-    getColor(level) {
-        switch(level) {
-            case 'ERROR': return '#ff4d4d';
-            case 'WARN': return '#ffa500';
-            case 'DEBUG': return '#7f8c8d';
-            default: return '#2ecc71';
-        }
-    },
-
-    info(cat, msg, data) { this.log('INFO', cat, msg, data); },
-    debug(cat, msg, data) { this.log('DEBUG', cat, msg, data); },
-    warn(cat, msg, data) { this.log('WARN', cat, msg, data); },
-    error(cat, msg, data) { this.log('ERROR', cat, msg, data); }
-};

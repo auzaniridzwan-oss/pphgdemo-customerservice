@@ -1,56 +1,44 @@
 ---
 alwaysApply: true
-description: Standards for Tailwind CSS, SCSS, and modern CSS variables for a mobile-first UI
+description: Styling guidelines and UI constraints to replicate the Braze Design System using Tailwind CSS and Flowbite components.
 globs: ["**/*.css", "**/*.scss", "index.html", "**/styles/*.css"]
 ---
 
 # Styling & Theme Architecture
+- This rule ensures the application's visual identity remains consistent with the Braze "Purple/Slate" dashboard aesthetic while leveraging the utility-first power of Tailwind CSS and the pre-built accessibility of Flowbite.
 
-## 1. Hybrid Styling Strategy
-- **Utility-First:** Use **Tailwind CSS** for 90% of layout, spacing, and typography to ensure Vercel's build-time optimization is maximized.
-- **Custom SCSS/CSS:** Use custom CSS only for the `#phone-frame` hardware mockup and complex animations (e.g., Braze In-App Message transitions).
-- **Compatibility:** Ensure all outputs are standard CSS3 compatible for native browser rendering on Vercel.
+# Core Color Palette (Tailwind Config)
+- All components must use these specific hex codes to match the Braze UI:
+- **Primary (Braze Purple):**  #612BBD (Use for active states, primary buttons, and selection indicators).
+- **Secondary (Dark Slate):** #2C3E50 (Use for sidebar backgrounds and secondary text).
+- **Surface Gray:**  #F4F7F9 (Use for the main application background).
+- **Border/Divider:** #E5E7EB (Use for card borders and table row separators).
+- **AI Highlight:** linear-gradient(to right, #8B5CF6, #00D1FF) (Use for AI Insight cards).
 
-## 2. Global Variables (Design Tokens)
-Define all brand and layout tokens in a `:root` block using modern CSS variables.
-- **Colors:** Use Flowbite's palette (e.g., `primary-600`) as the base.
-- **Dimensions:** - `--phone-w: 390px`
-    - `--phone-h: 844px`
-    - `--safe-t: 47px` (Notch)
-    - `--safe-b: 34px` (Home Indicator)
+# Layout Structure (Flowbite & Grid)
+- **Dashboard Shell:** Use Flowbite's "Sidebar Layout" template. The sidebar should be collapsed by default or fixed at a slim width (approx. 64px) to match the screenshots.
+- **Card System:** All data blocks (Profile, Sessions, Events) must use Flowbite Card components with:
+    rounded-lg
+    border border-gray-200
+    shadow-sm
+    Gray header background (bg-gray-100/50) for the title bar.
 
-## 3. The "Glassmorphism" Pattern
-To mimic iOS native feels, use the following Tailwind pattern for headers and navigation:
-- `bg-white/80 backdrop-blur-md border-gray-200/50`.
+# Typography & Density
+- **Font:** Use Inter or system-default sans-serif.
+- **Size:** Default text should be text-sm (14px) to maintain high data density. Labels should be text-xs font-semibold uppercase text-gray-500.
+- **Spacing:** Use a tight spacing scale. p-4 for cards and space-y-2 for attribute lists.
 
-## 4. Mobile-First CSS Best Practices
-- **Touch Targets:** Any interactive element (buttons, links) must have a minimum `min-h-[44px]` and `min-w-[44px]`.
-- **Text Selection:** Disable selection on UI chrome using `select-none`.
-- **Scrolling:** Always use `overscroll-behavior-y: contain` on the `#app-content` to prevent the "rubber-band" effect from moving the entire `#phone-frame`.
+# Component-Specific Styles
+- **Tabs:** Use Flowbite's "Underline" tab style. The active tab must have a border-bottom of 3px solid #612BBD.
+- **Status Pills:** Use Flowbite Badge components with rounded-full styling.
+- **Inputs (Editable Fields):** When in "Edit Mode," inputs should have a focus ring of focus:ring-[#612BBD].
+- **Timeline:** The 360 Timeline should use the Flowbite Vertical Timeline component, customized with channel-specific icons (WhatsApp green, Email blue).
 
-## 5. CSS Blueprint (SCSS/CSS Entry)
-```css
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+# AI Insights Styling
+- AI-generated content must be visually distinct. Use a subtle bg-violet-50 background or a left-border accent of #8B5CF6.
+- Use the "Sparkle" or "Bot" icon next to AI-generated recommendations to denote non-human data.
 
-@layer base {
-  body {
-    @apply bg-gray-100 flex items-center justify-center min-h-screen antialiased text-gray-900;
-  }
-}
-
-@layer components {
-  /* iPhone Mockup Core */
-  .iphone-container {
-    @apply relative overflow-hidden bg-white shadow-2xl border-[12px] border-gray-900;
-    width: var(--phone-w);
-    height: var(--phone-h);
-    border-radius: 3rem;
-  }
-
-  /* Interaction feedback for mobile */
-  .tap-highlight {
-    @apply active:opacity-70 active:scale-95 transition-all duration-150 ease-in-out;
-  }
-}
+# Implementation Constraints
+- Do not use custom CSS files if the style can be achieved with Tailwind utility classes.
+- Do not use arbitrary values (e.g., top-[13px]) unless absolutely necessary for pixel-perfect alignment with the screenshots.
+- **Priority:** Functionality and clarity over decorative animations.

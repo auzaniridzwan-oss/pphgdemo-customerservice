@@ -25,7 +25,6 @@ globs: ["**/*.js", "index.html", "**/services/storage.js"]
 
 ## 4. State Persistence Logic
 - **Sync with UI:** When a state changes (e.g., a notification is dismissed), update the LocalStorage immediately.
-- **Braze Synergy:** On app load, check `ar_app_user_id`. If it exists, call `braze.changeUser(id)` to ensure the SDK session aligns with the local session.
 
 ## 5. Storage Manager Blueprint (JS)
 ```javascript

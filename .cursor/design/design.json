@@ -1,0 +1,180 @@
+{
+    "applicationName": "Braze Customer Service Dashboard",
+    "version": "1.0.0",
+    "theme": {
+        "colors": {
+            "primary": "#612BBD",
+            "secondary": "#2C3E50",
+            "accent": "#00D1FF",
+            "background": "#F4F7F9",
+            "surface": "#FFFFFF",
+            "text": {
+                "primary": "#1A1A1A",
+                "secondary": "#6B7280",
+                "inverse": "#FFFFFF"
+            },
+            "status": {
+                "success": "#10B981",
+                "warning": "#F59E0B",
+                "error": "#EF4444",
+                "ai_insight": "#8B5CF6"
+            }
+        },
+        "typography": {
+            "fontFamily": "Inter, system-ui, sans-serif",
+            "baseSize": "14px",
+            "headingWeight": "600"
+        },
+        "spacing": {
+            "unit": 4,
+            "containerPadding": "24px",
+            "cardGap": "16px"
+        }
+    },
+    "layout": {
+        "type": "three_column_dashboard",
+        "structure": {
+            "sidebar": "Navigation icons and workspace switcher",
+            "header": "Global search, breadcrumbs, and user status summary",
+            "leftColumn": {
+                "width": "25%",
+                "content": "Core User Profile & Editable Attributes"
+            },
+            "centerColumn": {
+                "width": "50%",
+                "content": "Unified 360 Timeline & Note Composer"
+            },
+            "rightColumn": {
+                "width": "25%",
+                "content": "AI Insights & Quick Actions"
+            }
+        }
+    },
+    "components": [
+        {
+            "name": "EditableAttributeCard",
+            "description": "A card containing user data points that switch to input fields on click.",
+            "props": {
+                "title": "string",
+                "fields": [
+                    {
+                        "label": "string",
+                        "value": "any",
+                        "type": "text | date | select | phone",
+                        "isEditable": "boolean",
+                        "validation": "regex | null"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "UnifiedTimeline",
+            "description": "A chronological vertical feed of all user interactions.",
+            "subComponents": {
+                "TimelineItem": {
+                    "type": "message | system_event | agent_note",
+                    "channel": "whatsapp | email | sms | push",
+                    "timestamp": "ISO8601",
+                    "content": "string",
+                    "metadata": "object (e.g., Campaign Name, Delivery Status)"
+                }
+            }
+        },
+        {
+            "name": "NoteComposer",
+            "description": "Rich text area for CS agents to log manual interactions.",
+            "features": [
+                "Rich text formatting",
+                "Agent @mentions",
+                "Internal visibility toggle",
+                "AI Rewrite / Tone adjust"
+            ]
+        },
+        {
+            "name": "AI_InsightPanel",
+            "description": "Predictive analytics and generative recommendations.",
+            "elements": [
+                {
+                    "id": "sentiment_meter",
+                    "label": "Current Sentiment",
+                    "values": [
+                        "Frustrated",
+                        "Neutral",
+                        "Satisfied"
+                    ]
+                },
+                {
+                    "id": "churn_risk",
+                    "label": "Churn Propensity Score",
+                    "type": "percentage_indicator"
+                },
+                {
+                    "id": "next_best_action",
+                    "label": "AI Recommendation",
+                    "content": "string (Generative text)",
+                    "actionButton": "string (CTA)"
+                }
+            ]
+        }
+    ],
+    "pages": [
+        {
+            "pageId": "user_profile_detail",
+            "route": "/users/:userId",
+            "sections": [
+                {
+                    "id": "header_area",
+                    "component": "GlobalHeader",
+                    "data": {
+                        "userName": "{{user_display_name}}",
+                        "userId": "{{external_id}}",
+                        "statusBadges": [
+                            "{{user_tier}}",
+                            "{{account_status}}"
+                        ]
+                    }
+                },
+                {
+                    "id": "profile_column",
+                    "location": "left",
+                    "components": [
+                        "UserIdentityCard",
+                        "DemographicsEditableCard",
+                        "CustomAttributesEditableCard"
+                    ]
+                },
+                {
+                    "id": "interaction_column",
+                    "location": "center",
+                    "components": [
+                        "ActivityFilterTabs",
+                        "NoteComposer",
+                        "UnifiedTimeline"
+                    ]
+                },
+                {
+                    "id": "intelligence_column",
+                    "location": "right",
+                    "components": [
+                        "AI_InsightPanel",
+                        "SessionOverviewCard",
+                        "DeviceInventoryCard",
+                        "QuickActionButtons"
+                    ]
+                }
+            ]
+        }
+    ],
+    "placeholders": {
+        "text": {
+            "user_name": "Customer Name",
+            "external_id": "EXT-ID-0000",
+            "braze_id": "BRZ-ID-0000",
+            "timestamp": "YYYY-MM-DD HH:mm:ss"
+        },
+        "images": {
+            "avatar": "https://api.placeholder.com/150/profile_pic",
+            "channel_icon": "https://api.placeholder.com/24/icon"
+        }
+    }
+}

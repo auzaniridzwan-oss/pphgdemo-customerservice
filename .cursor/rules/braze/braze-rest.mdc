@@ -1,3 +1,40 @@
 ---
 alwaysApply: true
+description: Guidelines for building a robust Braze REST API integration layer for the Customer Service User Profile application.
+globs: []
 ---
+# Context
+- This rule is part of the Braze Customer Service user profile application. It ensures that all API interactions are consistent, secure, and handle the specific nuances of the Braze platform (rate limits, data structures, and asynchronous exports).
+
+# Role
+- You are tasked with building the integration layer between this application and the Braze REST API. This layer is critical for providing Customer Service (CS) agents with real-time data and the ability to modify user profiles.
+
+# References
+- **Base URL:** Use the specific Braze REST Endpoint associated with the target instance.
+- **User Export (Reading):** Refer to Braze Export API (https://www.braze.com/docs/api/endpoints/export). Use /users/export/ids to pull full profile data for specific external_ids or braze_ids.
+- **User Track (Updating):** Refer to Braze User Data API (https://www.braze.com/docs/api/endpoints/user_data). Use /users/track for updating attributes, events, and purchases.
+- **REST API Reference:** Refer to Braze REST API (https://www.braze.com/docs/api/basics/#braze-rest-api-collection) for general operations on configuration, initialization, and error handling.
+
+# Library
+- Use Ky (https://github.com/sindresorhus/ky) as the HTTP client library.
+
+# Type Safety
+- **Data Contract:** Every API response must have a corresponding JS interface/type.
+- **Decouple UI:** Create internal domain models that maps to the API responses and decouples the UI from the API.
+
+# Error Handling
+- Wrap all requests in standardized try-catch block.
+- **Error Codes:** Distinguish betweene expected errors (4xx) and System Errors (5xx).
+- **Retry Pattern:** Implement exponential backoff for server errors and network timeouts.
+- **Standardized Error Objects:** Create unified `ApiError` class that captures status codes, trace ID, and human readable messages.
+
+# Design Pattern
+- **Repository Pattern:** Abstract the data fetching logic behind a Repository interface.
+- **Singleton:** Ensure single instance of the HTTP client to manage global headers, connection pooling.
+
+# Configuration
+- **Environment Variables** Externalize all API variables to configuration file.
+
+# Business Logic
+- **Categorization:** Implement methods that allow the caller to specify which categories to interact with (e.g., attributes, events, purchases, user_aliases).
+- **Enumeration:** Use defined enumerators for selection of options (e.g. updating attributes, updating events, updating purchases, updating user id).

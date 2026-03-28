@@ -1,19 +1,18 @@
 /**
  * UserProfilePage
  *
- * Orchestrates the three-column Customer Service Command Center layout.
+ * Orchestrates the two-column Customer Service Command Center layout.
  * Called by Router whenever the hash matches #/users/:userId.
  *
  * Render sequence:
  *  1. Inject skeleton loading state into #page-content immediately.
- *  2. Fire UserRepository.getProfile() + getMockTimeline() + getMockInsights() in parallel.
+ *  2. Fire UserRepository.getProfile() + getMockTimeline() in parallel.
  *  3. Replace skeletons with fully populated column components.
  *  4. Track cs_profile_viewed event.
  *
  * Components mounted:
- *  Left   → UserIdentityCard, DemographicsEditableCard, CustomAttributesEditableCard
- *  Center → NoteComposer, UnifiedTimeline
- *  Right  → AI_InsightPanel, SessionOverviewCard, DeviceInventoryCard, QuickActionButtons
+ *  Column 1 → UserIdentityCard, Demographics EditableAttributeCard, Hotel Preferences EditableAttributeCard
+ *  Column 2 → NoteComposer, UnifiedTimeline
  */
 
 import { AppLogger }             from '../core/AppLogger.js';
@@ -23,13 +22,8 @@ import { UserIdentityCard }      from '../components/UserIdentityCard.js';
 import { EditableAttributeCard } from '../components/EditableAttributeCard.js';
 import { UnifiedTimeline }       from '../components/UnifiedTimeline.js';
 import { NoteComposer }          from '../components/NoteComposer.js';
-import { AI_InsightPanel }       from '../components/AI_InsightPanel.js';
-import { SessionOverviewCard }   from '../components/SessionOverviewCard.js';
-import { DeviceInventoryCard }   from '../components/DeviceInventoryCard.js';
-import { QuickActionButtons }    from '../components/QuickActionButtons.js';
 import { GlobalHeader }          from '../components/GlobalHeader.js';
-import { Toast }                 from '../components/Toast.js';
-import { getMockTimeline, getMockInsights } from '../data/mockData.js';
+import { getMockTimeline }       from '../data/mockData.js';
 
 export const UserProfilePage = {
 
@@ -38,7 +32,7 @@ export const UserProfilePage = {
 
   /**
    * Entry point called by the Router.
-   * Renders the full three-column layout for the given userId.
+   * Renders the full two-column layout for the given userId.
    *
    * @param {string} userId
    */
@@ -55,31 +49,25 @@ export const UserProfilePage = {
 
     try {
       // 2. Fetch data in parallel
-      const [profile, timelineEvents, insights] = await Promise.all([
+      const [profile, timelineEvents] = await Promise.all([
         UserRepository.getProfile(userId),
         Promise.resolve(getMockTimeline(userId)),
-        Promise.resolve(getMockInsights(userId)),
       ]);
 
       GlobalHeader.setBreadcrumb(profile.displayName);
 
       // 3. Build columns
-      const leftCol   = document.createElement('div');
+      const leftCol = document.createElement('div');
       leftCol.className = 'col-left';
 
-      const centerCol = document.createElement('div');
-      centerCol.className = 'col-center';
-
-      const rightCol  = document.createElement('div');
+      const rightCol = document.createElement('div');
       rightCol.className = 'col-right';
 
-      /* ---- LEFT COLUMN ---- */
+      /* ---- COLUMN 1 — Profile & attributes ---- */
 
-      // Identity card
       const identityCard = new UserIdentityCard(profile);
       leftCol.appendChild(identityCard.render());
 
-      // Demographics (standard Braze attributes)
       const demFields = _demographicsFields(profile);
       const demCard = new EditableAttributeCard({
         title: 'Demographics',
@@ -91,7 +79,6 @@ export const UserProfilePage = {
       });
       leftCol.appendChild(demCard.render());
 
-      // Custom attributes
       const customFields = _customAttributeFields(profile);
       const customCard = new EditableAttributeCard({
         title: 'Hotel Preferences',
@@ -103,9 +90,8 @@ export const UserProfilePage = {
       });
       leftCol.appendChild(customCard.render());
 
-      /* ---- CENTER COLUMN ---- */
+      /* ---- COLUMN 2 — Notes & events timeline ---- */
 
-      // Note Composer
       const noteComposer = new NoteComposer({
         externalId: userId,
         onNoteAdded: (note) => {
@@ -115,42 +101,15 @@ export const UserProfilePage = {
           }
         },
       });
-      centerCol.appendChild(noteComposer.render());
+      rightCol.appendChild(noteComposer.render());
 
-      // Unified Timeline
       const timeline = new UnifiedTimeline(timelineEvents);
       this._timelineComponent = timeline;
-      centerCol.appendChild(timeline.render());
-
-      /* ---- RIGHT COLUMN ---- */
-
-      const aiPanel = new AI_InsightPanel({
-        insights,
-        externalId: userId,
-        onCtaClick: (action) => {
-          Toast.show(`Action "${action.cta}" sent to Braze`, 'success');
-        },
-      });
-      rightCol.appendChild(aiPanel.render());
-
-      const sessionCard = new SessionOverviewCard(profile);
-      rightCol.appendChild(sessionCard.render());
-
-      const deviceCard = new DeviceInventoryCard(profile);
-      rightCol.appendChild(deviceCard.render());
-
-      const quickActions = new QuickActionButtons({
-        externalId: userId,
-        onAction: (action) => {
-          AppLogger.info('[UI]', `Quick action: ${action.id}`);
-        },
-      });
-      rightCol.appendChild(quickActions.render());
+      rightCol.appendChild(timeline.render());
 
       // 4. Swap out skeletons
       pageEl.innerHTML = '';
       pageEl.appendChild(leftCol);
-      pageEl.appendChild(centerCol);
       pageEl.appendChild(rightCol);
 
       // 5. Track page view
@@ -228,7 +187,7 @@ function _customAttributeFields(p) {
 
 /**
  * Returns a full-width skeleton loading state that matches the
- * three-column layout proportions.
+ * two-column layout proportions.
  * @returns {string}
  */
 function _skeletonHTML() {
@@ -260,7 +219,7 @@ function _skeletonHTML() {
       ${skCard(6)}
     </div>
 
-    <div class="col-center">
+    <div class="col-right">
       <div class="card">
         <div class="skeleton" style="height:80px; border-radius:8px;"></div>
       </div>
@@ -276,12 +235,6 @@ function _skeletonHTML() {
           </div>
         `).join('')}
       </div>
-    </div>
-
-    <div class="col-right">
-      ${skCard(4)}
-      ${skCard(3)}
-      ${skCard(2)}
     </div>
   `;
 }

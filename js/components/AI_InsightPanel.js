@@ -9,7 +9,7 @@
  *  - Next Best Action card with CTA button
  *  - Predicted LTV and next stay
  *
- * @param {object} insights - From getMockInsights() or a real AI endpoint
+ * @param {object} insights - Insight payload from a real AI endpoint or static fixture
  * @param {string} externalId
  * @param {Function} onCtaClick - Callback when the NBA CTA is triggered
  */

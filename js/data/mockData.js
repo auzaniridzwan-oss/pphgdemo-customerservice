@@ -7,7 +7,6 @@
  * Includes:
  *  - Full user profile (maps to Braze /users/export/ids response shape)
  *  - Unified timeline events across WhatsApp, Email, SMS, Push, Notes, Events
- *  - AI insight values (sentiment, churn score, next best action)
  */
 
 import { UserProfile }    from '../api/models/UserProfile.js';
@@ -197,41 +196,6 @@ const RAW_TIMELINE = {
 };
 
 /* ============================================================
-   AI Insights Store
-   ============================================================ */
-
-export const AI_INSIGHTS = {
-  'DEMO-001': {
-    sentiment:         'Satisfied',    // 'Frustrated' | 'Neutral' | 'Satisfied'
-    sentimentScore:    0.78,           // 0.0 = most frustrated, 1.0 = most satisfied
-    churnScore:        12,             // percentage (0–100)
-    churnRisk:         'Low',          // 'Low' | 'Medium' | 'High'
-    nextBestAction: {
-      recommendation: 'Offer a complimentary suite upgrade for the upcoming stay to deepen loyalty and drive Platinum tier conversion. Guest is 2 stays away from Platinum status.',
-      cta:            'Send Upgrade Offer',
-      ctaEvent:       'cs_quick_action_triggered',
-      ctaParams:      { action: 'upgrade_offer', tier_target: 'Platinum' },
-    },
-    predictedLtv:      'SGD 24,800',
-    predictedNextStay: 'Mar 2026',
-  },
-  'DEMO-002': {
-    sentiment:         'Neutral',
-    sentimentScore:    0.55,
-    churnScore:        28,
-    churnRisk:         'Medium',
-    nextBestAction: {
-      recommendation: 'Hiroshi has not engaged with the last 3 email campaigns. Consider switching to WhatsApp for the upcoming seasonal offer and including a Japanese-language version.',
-      cta:            'Switch Channel to WhatsApp',
-      ctaEvent:       'cs_quick_action_triggered',
-      ctaParams:      { action: 'channel_switch', channel: 'whatsapp' },
-    },
-    predictedLtv:      'JPY 3,200,000',
-    predictedNextStay: 'Apr 2026',
-  },
-};
-
-/* ============================================================
    Public API
    ============================================================ */
 
@@ -259,16 +223,6 @@ export function getMockTimeline(externalId) {
   return raws
     .map(r => new TimelineEvent(r))
     .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-}
-
-/**
- * Returns the AI insights object for the given external_id.
- *
- * @param {string} externalId
- * @returns {object}
- */
-export function getMockInsights(externalId) {
-  return AI_INSIGHTS[externalId] || AI_INSIGHTS['DEMO-001'];
 }
 
 /**
