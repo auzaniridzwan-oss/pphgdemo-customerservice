@@ -1,32 +1,34 @@
-# Braze CS Command Center
-### A Mobile-First Web Application with iPhone Frame Layout
+# PPHG Customer Service Command Center
 
-A three-column Customer Service Command Center built on top of the **Braze REST API**, designed for Pan Pacific Hotel Group CS agents to view, edit, and act on guest profiles in real time.
+### Braze Customer Profile Editor
+
+A three-column **Customer Service Command Center** for Pan Pacific Hotel Group, built on the **Braze REST API**. Agents view and edit guest profiles in real time; the UI is a desktop-first Flowbite dashboard that stacks cleanly on tablets and phones for field use.
 
 ---
 
 ## Overview
 
-The CS Command Center gives customer service agents a single-pane-of-glass view of every hotel guest's Braze profile. Agents can:
+The app gives CS agents a single place to work every hotel guest’s Braze profile. Agents can:
 
-- Read and **live-edit** user attributes (name, tier, preferences) — changes sync to Braze via `/users/track`.
-- Review a **unified 360° interaction timeline** across WhatsApp, Email, SMS, and Push channels.
-- Compose and save **agent notes** with rich text, @mentions, and an AI rewrite helper.
-- Consume **AI-generated insights**: sentiment score, churn propensity, and next-best-action recommendations.
-- Trigger **quick actions** (send offer, flag for review, escalate) that fire Braze Custom Events.
+- Read and **live-edit** standard and custom attributes — updates go to Braze via `/users/track` (proxied through Vercel so the REST API key never ships to the browser).
+- Persist **agent notes** on the profile using the custom attribute `notes` (Braze array-of-objects), with `$add` for new notes, plus a `cs_note_saved` custom event for analytics.
+- Review a **unified 360° timeline** (messaging channels plus saved notes).
+- Use **AI insights** and **quick actions** that log additional Braze custom events where configured.
+
+**Why a server proxy:** The Braze REST API key stays in Vercel environment variables; the browser only calls same-origin `/api/braze/*` routes. Demo Mode (no key) serves realistic mock data with a visible header indicator.
 
 ---
 
 ## Tech Stack
 
-| Layer        | Technology                                             |
-|--------------|--------------------------------------------------------|
-| **UI**       | HTML5, CSS3 (custom design tokens), Tailwind CDN       |
-| **Components** | Flowbite 2.3                                         |
-| **Icons**    | FontAwesome Kit `a21f98a3f6`                           |
-| **HTTP**     | [Ky](https://github.com/sindresorhus/ky) 1.x (ESM)    |
-| **Marketing**| Braze REST API (no WebSDK — pure server-side calls)    |
-| **Hosting**  | [Vercel](https://vercel.com/auzani-ridzwans-projects)  |
+| Layer | Technology |
+|-------|------------|
+| **UI** | HTML5, CSS3 (design tokens), [Tailwind CSS](https://tailwindcss.com/) (CDN) |
+| **Components** | [Flowbite](https://flowbite.com/) 2.3 |
+| **Icons** | FontAwesome Kit `a21f98a3f6` |
+| **HTTP** | [Ky](https://github.com/sindresorhus/ky) 1.x (ESM) |
+| **Marketing / data** | Braze REST API via Vercel serverless routes under `/api/braze/` |
+| **Hosting** | [Vercel — auzani-ridzwans-projects](https://vercel.com/auzani-ridzwans-projects) |
 
 ---
 
@@ -35,28 +37,30 @@ The CS Command Center gives customer service agents a single-pane-of-glass view 
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/auzaniridzwan-oss/app-customerservice-commandcenter.git
-cd app-customerservice-commandcenter
+git clone https://github.com/auzaniridzwan-oss/pphgdemo-customerservice.git
+cd pphgdemo-customerservice
 ```
+
+Org profile: [auzaniridzwan-oss](https://github.com/auzaniridzwan-oss).
 
 ### 2. Configure environment
 
 ```bash
 cp .env.example .env
-# Edit .env and populate BRAZE_API_KEY and BRAZE_REST_ENDPOINT
+# Set BRAZE_API_KEY and BRAZE_REST_ENDPOINT for local Vercel-style runs
 ```
 
-**Demo Mode (no API key):** If `BRAZE_API_KEY` is left empty, the app automatically switches to Demo Mode using realistic seeded data. A visible amber badge in the header indicates this state.
+**Demo Mode:** If the app has no live Braze configuration, it uses seeded mock data. An amber badge in the header shows Demo Mode.
 
 ### 3. Run locally
 
-No build step is required — open `index.html` directly or serve with any static file server:
+Static preview (no API proxy):
 
 ```bash
 npx serve .
-# or
-python3 -m http.server 8080
 ```
+
+For full API proxy behaviour, deploy to Vercel or run `vercel dev` so `/api/braze/*` is available.
 
 ### 4. Deploy to Vercel
 
@@ -64,99 +68,94 @@ python3 -m http.server 8080
 vercel --prod
 ```
 
-Set the following environment variables in the Vercel dashboard:
-
-| Variable               | Description                                      |
-|------------------------|--------------------------------------------------|
-| `BRAZE_API_KEY`        | Your Braze REST API key (with `/users` permissions) |
-| `BRAZE_REST_ENDPOINT`  | Your instance endpoint, e.g. `https://rest.iad-01.braze.com` |
+| Variable | Description |
+|----------|-------------|
+| `BRAZE_API_KEY` | REST API key with `/users` permissions (server-side only) |
+| `BRAZE_REST_ENDPOINT` | Instance REST base, e.g. `https://rest.iad-01.braze.com` |
 
 ---
 
 ## Architecture
 
-### Core Singletons
+State and diagnostics are centralized so the UI stays thin and future storage backends are easy to swap.
 
-| Module               | Responsibility                                                          |
-|----------------------|-------------------------------------------------------------------------|
-| `StorageManager`     | All `localStorage` I/O, namespaced under `ar_app_` prefix              |
-| `AppLogger`          | Centralised `INFO / DEBUG / WARN / ERROR` logging with console styling  |
-| `Router`             | Hash-based SPA routing (`#/users/:userId`)                              |
+| Module | Responsibility |
+|--------|----------------|
+| `StorageManager` | All persisted preferences; keys prefixed with `ar_app_` |
+| `AppLogger` | Buffered `INFO` / `DEBUG` / `WARN` / `ERROR` logs, console styling, `getLogs()` export |
+| `Router` | Hash SPA routes (e.g. `#/users/:userId`) |
 
-### API Layer
-
-| Module               | Responsibility                                                          |
-|----------------------|-------------------------------------------------------------------------|
-| `BrazeClient`        | Ky singleton — `Authorization` header, exponential backoff on 5xx      |
-| `UserRepository`     | `getProfile()`, `updateAttributes()`, `trackEvent()` — real or mock    |
-| `UserProfile` model  | Domain model decoupled from raw Braze API response shape                |
-| `TimelineEvent` model| Domain model for unified timeline items                                 |
+| Module | Responsibility |
+|--------|----------------|
+| `BrazeClient` | Ky singleton — auth header, retries on 5xx |
+| `UserRepository` | `getProfile`, `findByEmail`, `getNotes`, `addNote`, `setNotes`, `updateAttributes`, `trackEvent` — live or mock |
+| `CustomerNote` | Normalise/build Braze `notes` array items and map to timeline rows |
+| `UserProfile` | Domain model decoupled from raw export JSON |
+| `TimelineEvent` | Unified timeline shape for the 360° view |
 
 ---
 
 ## Braze Integration Details
 
-### Endpoints Used
+### Endpoints (via proxy)
 
-| Action              | Endpoint                | Method |
-|---------------------|-------------------------|--------|
-| Read user profile   | `/users/export/ids`     | POST   |
-| Update attributes   | `/users/track`          | POST   |
-| Log custom event    | `/users/track`          | POST   |
+| Action | Path | Method |
+|--------|------|--------|
+| Read user by `external_id` or email | `/users/export/ids` | POST |
+| Update attributes (including `notes` mutations) | `/users/track` | POST |
+| Log custom events | `/users/track` | POST |
 
-### Custom Events Tracked
+### Custom events
 
-| Event Name                   | Trigger                                      |
-|------------------------------|----------------------------------------------|
-| `cs_note_saved`              | Agent saves a note in the NoteComposer       |
-| `cs_attribute_updated`       | Agent edits a user attribute                 |
-| `cs_quick_action_triggered`  | Agent clicks a Quick Action button           |
-| `cs_profile_viewed`          | Agent opens a user profile page              |
+| Event | Typical trigger | Example properties |
+|-------|-----------------|-------------------|
+| `cs_note_saved` | NoteComposer persists a note | `internal`, `length`, `note_id` |
+| `cs_attribute_updated` | Successful attribute update from CS UI | `changed_fields` |
+| `cs_quick_action_triggered` | Quick action / AI CTA | Varies by button |
+| `cs_profile_viewed` | User profile route loads | Context props as implemented |
 
-### User Attributes Read/Written
+### User attributes (non-exhaustive)
 
-| Attribute              | Type     | Card                          |
-|------------------------|----------|-------------------------------|
-| `first_name`           | string   | DemographicsEditableCard      |
-| `last_name`            | string   | DemographicsEditableCard      |
-| `email`                | string   | DemographicsEditableCard      |
-| `phone`                | string   | DemographicsEditableCard      |
-| `home_city`            | string   | DemographicsEditableCard      |
-| `loyalty_tier`         | string   | CustomAttributesEditableCard  |
-| `account_status`       | string   | CustomAttributesEditableCard  |
-| `preferred_language`   | string   | CustomAttributesEditableCard  |
-| `total_stays`          | integer  | CustomAttributesEditableCard  |
-| `last_stay_property`   | string   | CustomAttributesEditableCard  |
+| Attribute | Notes |
+|-----------|--------|
+| `first_name`, `last_name`, `email`, `phone`, `home_city` | Demographics card |
+| `loyalty_tier`, `account_status`, `preferred_language`, `total_stays`, `last_stay_property` | Custom attributes card |
+| `notes` | Array of objects: `note_id` (UUID), `created_at` (ISO 8601), `body_text`, `is_internal`, `author`. New notes are appended with Braze `$add` on `notes`. |
 
-> **Reference:** [Braze WebSDK / REST API Docs](https://www.braze.com/docs/developer_guide/sdk_integration/?sdktab=web)
+**References**
+
+- [Braze REST API home](https://www.braze.com/docs/api/home) — primary API documentation for this app  
+- [Braze User Attributes object](https://www.braze.com/docs/api/objects_filters/user_attributes_object/) — nested `custom_attributes`, including array-of-objects patterns  
+- [Braze Developer Guide (Web SDK)](https://www.braze.com/docs/developer_guide/sdk_integration/?sdktab=web) — broader platform context (this app uses REST, not the Web SDK for profile CRUD)
 
 ---
 
-## Layout Reference
+## Layout reference
 
-The `#page-content` element hosts a three-column flex layout:
+`#page-content` uses a three-column flex layout (identity | timeline & composer | AI / session / actions). Below ~1024px width, columns stack for smaller viewports.
 
 ```
 ┌──────────┬─────────────────────────┬──────────┐
 │  Left    │       Center            │  Right   │
-│  25%     │        50%              │  25%     │
-│          │                         │          │
-│ Identity │  Filter Tabs            │ AI Panel │
-│ Demo     │  Note Composer          │ Session  │
-│ Custom   │  Unified Timeline       │ Device   │
-│ Attrs    │                         │ Actions  │
+│  ~25%    │        ~50%             │  ~25%    │
+│ Identity │  Tabs, Note Composer    │ AI Panel │
+│ Custom   │  Unified Timeline       │ Session  │
 └──────────┴─────────────────────────┴──────────┘
 ```
 
-On viewports narrower than 1024px, columns stack vertically for mobile usability.
+---
+
+## LocalStorage keys (examples)
+
+| Key | Purpose |
+|-----|---------|
+| `ar_app_user_session` | Agent session object |
+| `ar_app_current_user_id` | Last viewed `external_id` |
+| `ar_app_mock_mode` | Manual Demo Mode override |
+| `ar_app_debug_mode` | Verbose logging when enabled |
 
 ---
 
-## LocalStorage Keys
+## Live documentation
 
-| Key                       | Value        | Purpose                                 |
-|---------------------------|--------------|-----------------------------------------|
-| `ar_app_user_session`     | `{}`         | Active agent session object             |
-| `ar_app_current_user_id`  | `string`     | Last-viewed customer `external_id`      |
-| `ar_app_mock_mode`        | `boolean`    | Manual Demo Mode override               |
-| `ar_app_braze_init_status`| `string`     | SDK init state for diagnostics          |
+Components log through `AppLogger` on init and on important user actions, so the browser console doubles as lightweight runtime documentation for demos and support.

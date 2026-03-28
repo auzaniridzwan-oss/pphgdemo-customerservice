@@ -8,6 +8,9 @@
  * Methods:
  *  - getProfile(externalId)              → UserProfile
  *  - findByEmail(email)                  → UserProfile | null
+ *  - getNotes(externalId)                → CustomerNote[]
+ *  - setNotes(externalId, notesArray)    → boolean
+ *  - addNote(externalId, draft)         → CustomerNote | null
  *  - updateAttributes(externalId, attrs) → boolean
  *  - trackEvent(externalId, name, props) → boolean
  *
@@ -20,6 +23,10 @@
 
 import { BrazeClient, ApiError } from './BrazeClient.js';
 import { UserProfile }           from './models/UserProfile.js';
+import {
+  normalizeNotes,
+  buildNoteForTrack,
+} from './models/CustomerNote.js';
 import { AppLogger }             from '../core/AppLogger.js';
 import { StorageManager }        from '../core/StorageManager.js';
 
@@ -107,6 +114,54 @@ export const UserRepository = {
   },
 
   /* ----------------------------------------------------------
+     READ / WRITE — `notes` custom attribute (array of objects)
+     ---------------------------------------------------------- */
+
+  /**
+   * Returns normalised CS notes from the Braze `notes` custom attribute (array of objects).
+   *
+   * @param {string} externalId
+   * @returns {Promise<import('./models/CustomerNote.js').CustomerNote[]>}
+   */
+  async getNotes(externalId) {
+    const profile = await this.getProfile(externalId);
+    return normalizeNotes(profile.customAttributes.notes);
+  },
+
+  /**
+   * Replaces the entire `notes` array on the user profile (full sync). Use sparingly — subject to Braze size limits.
+   *
+   * @param {string} externalId
+   * @param {unknown[]} notesArray - Raw or partial note objects; normalised before send
+   * @returns {Promise<boolean>}
+   */
+  async setNotes(externalId, notesArray) {
+    const normalised = normalizeNotes(Array.isArray(notesArray) ? notesArray : []);
+    return this.updateAttributes(externalId, {
+      customAttributes: { notes: normalised },
+    });
+  },
+
+  /**
+   * Appends one note via Braze `$add` on the `notes` array-of-objects attribute.
+   *
+   * @param {string} externalId
+   * @param {{ bodyText: string, isInternal?: boolean, author?: string }} draft
+   * @returns {Promise<import('./models/CustomerNote.js').CustomerNote|null>} The persisted note shape, or null on failure
+   */
+  async addNote(externalId, draft) {
+    const note = buildNoteForTrack({
+      bodyText:    draft.bodyText,
+      isInternal:  draft.isInternal,
+      author:      draft.author,
+    });
+    const ok = await this.updateAttributes(externalId, {
+      customAttributes: { notes: { $add: [note] } },
+    });
+    return ok ? note : null;
+  },
+
+  /* ----------------------------------------------------------
      READ — Find user by email address
      ---------------------------------------------------------- */
 
@@ -188,6 +243,10 @@ export const UserRepository = {
 
     if (!config.isLiveMode()) {
       AppLogger.info('[API]', `Demo mode — simulated attribute update for ${externalId}`, payload);
+      if (changes.customAttributes && Object.prototype.hasOwnProperty.call(changes.customAttributes, 'notes')) {
+        const { applyDemoNotesMutation } = await import('../data/mockData.js');
+        applyDemoNotesMutation(externalId, changes.customAttributes.notes);
+      }
       await _simulateLatency();
       return true;
     }

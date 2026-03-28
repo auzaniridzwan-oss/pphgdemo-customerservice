@@ -18,6 +18,7 @@
 import { AppLogger }             from '../core/AppLogger.js';
 import { StorageManager }        from '../core/StorageManager.js';
 import { UserRepository }        from '../api/UserRepository.js';
+import { normalizeNotes, customerNoteToTimelineEvent } from '../api/models/CustomerNote.js';
 import { UserIdentityCard }      from '../components/UserIdentityCard.js';
 import { EditableAttributeCard } from '../components/EditableAttributeCard.js';
 import { UnifiedTimeline }       from '../components/UnifiedTimeline.js';
@@ -55,6 +56,12 @@ export const UserProfilePage = {
       ]);
 
       GlobalHeader.setBreadcrumb(profile.displayName);
+
+      const profileNotes = normalizeNotes(profile.customAttributes.notes);
+      const noteEvents = profileNotes.map(customerNoteToTimelineEvent);
+      let mergedTimeline = [...noteEvents, ...timelineEvents].sort(
+        (a, b) => new Date(b.timestamp) - new Date(a.timestamp),
+      );
 
       // 3. Build columns
       const leftCol = document.createElement('div');
@@ -96,14 +103,16 @@ export const UserProfilePage = {
         externalId: userId,
         onNoteAdded: (note) => {
           if (this._timelineComponent) {
-            const updated = [note, ...timelineEvents];
-            this._timelineComponent.update(updated);
+            mergedTimeline = [note, ...mergedTimeline].sort(
+              (a, b) => new Date(b.timestamp) - new Date(a.timestamp),
+            );
+            this._timelineComponent.update(mergedTimeline);
           }
         },
       });
       rightCol.appendChild(noteComposer.render());
 
-      const timeline = new UnifiedTimeline(timelineEvents);
+      const timeline = new UnifiedTimeline(mergedTimeline);
       this._timelineComponent = timeline;
       rightCol.appendChild(timeline.render());
 

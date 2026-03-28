@@ -11,6 +11,7 @@
 
 import { UserProfile }    from '../api/models/UserProfile.js';
 import { TimelineEvent }  from '../api/models/TimelineEvent.js';
+import { normalizeNotes } from '../api/models/CustomerNote.js';
 
 /* ============================================================
    User Profiles Store
@@ -46,6 +47,15 @@ const RAW_PROFILES = {
       room_preference:    'High Floor, Sea View',
       dietary_preference: 'Halal',
       vip_flag:           true,
+      notes: [
+        {
+          note_id:     'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+          created_at:  '2026-03-08T10:30:00.000Z',
+          body_text:   'VIP guest — requested high floor for next stay.',
+          is_internal: true,
+          author:      'Sarah Lim',
+        },
+      ],
     },
     devices: [
       { model: 'iPhone 15 Pro', os: 'iOS 17.3', platform: 'ios',     carrier: 'Singtel' },
@@ -86,6 +96,15 @@ const RAW_PROFILES = {
       room_preference:    'Suite, Non-Smoking',
       dietary_preference: 'No Restrictions',
       vip_flag:           true,
+      notes: [
+        {
+          note_id:     'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+          created_at:  '2026-02-18T14:00:00.000Z',
+          body_text:   'Prefers quiet room away from elevator.',
+          is_internal: true,
+          author:      'David Chen',
+        },
+      ],
     },
     devices: [
       { model: 'Samsung Galaxy S24', os: 'Android 14', platform: 'android', carrier: 'SoftBank' },
@@ -196,6 +215,44 @@ const RAW_TIMELINE = {
 };
 
 /* ============================================================
+   Demo-mode notes overlay (persists across simulated /users/track)
+   ============================================================ */
+
+/** @type {Record<string, import('../api/models/CustomerNote.js').CustomerNote[]>} */
+const _demoNotesOverlay = {};
+
+/**
+ * Returns raw `notes` array for a demo user: seeded profile data unless an overlay was applied.
+ *
+ * @param {string} externalId
+ * @returns {object[]}
+ */
+function _effectiveMockNotesRaw(externalId) {
+  if (Object.prototype.hasOwnProperty.call(_demoNotesOverlay, externalId)) {
+    return _demoNotesOverlay[externalId];
+  }
+  const prof = RAW_PROFILES[externalId] || RAW_PROFILES['DEMO-001'];
+  return prof.custom_attributes?.notes || [];
+}
+
+/**
+ * Applies a Braze-style `notes` mutation in demo mode (full array or `{ $add: [...] }`).
+ *
+ * @param {string} externalId
+ * @param {unknown[]|{ $add?: object[] }} value
+ */
+export function applyDemoNotesMutation(externalId, value) {
+  if (Array.isArray(value)) {
+    _demoNotesOverlay[externalId] = normalizeNotes(value);
+    return;
+  }
+  if (value && typeof value === 'object' && Array.isArray(value.$add)) {
+    const merged = [..._effectiveMockNotesRaw(externalId), ...value.$add];
+    _demoNotesOverlay[externalId] = normalizeNotes(merged);
+  }
+}
+
+/* ============================================================
    Public API
    ============================================================ */
 
@@ -207,7 +264,14 @@ const RAW_TIMELINE = {
  * @returns {UserProfile}
  */
 export function getMockProfile(externalId) {
-  const raw = RAW_PROFILES[externalId] || RAW_PROFILES['DEMO-001'];
+  const template = RAW_PROFILES[externalId] || RAW_PROFILES['DEMO-001'];
+  const raw = {
+    ...template,
+    custom_attributes: { ...template.custom_attributes },
+  };
+  if (Object.prototype.hasOwnProperty.call(_demoNotesOverlay, externalId)) {
+    raw.custom_attributes.notes = _demoNotesOverlay[externalId];
+  }
   return new UserProfile(raw);
 }
 

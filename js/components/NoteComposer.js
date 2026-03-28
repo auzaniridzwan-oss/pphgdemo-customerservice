@@ -8,7 +8,8 @@
  *  - @mention trigger (typing '@' shows a simple agent dropdown)
  *  - Internal visibility toggle (note visible to agents only vs. all)
  *  - AI Rewrite button (stub — logs intent and simulates a rewrite in demo mode)
- *  - On submit: tracks a `cs_note_saved` Braze event and adds note to timeline
+ *  - On submit: persists to Braze `notes` (array of objects) via UserRepository.addNote,
+ *    tracks `cs_note_saved`, and adds the note to the timeline
  *
  * @param {object}   options
  * @param {string}   options.externalId   - The customer's external_id
@@ -17,12 +18,10 @@
 
 import { AppLogger }      from '../core/AppLogger.js';
 import { UserRepository } from '../api/UserRepository.js';
-import { TimelineEvent }  from '../api/models/TimelineEvent.js';
+import { customerNoteToTimelineEvent } from '../api/models/CustomerNote.js';
 import { Toast }          from './Toast.js';
 
 const MOCK_AGENTS = ['Sarah Lim', 'David Chen', 'Priya Nair', 'James Tan', 'Maria Santos'];
-
-let _noteIdCounter = 1000;
 
 export class NoteComposer {
   /**
@@ -301,24 +300,27 @@ export class NoteComposer {
     }
 
     try {
+      const saved = await UserRepository.addNote(this.externalId, {
+        bodyText:   content,
+        isInternal: this.isInternal,
+      });
+      if (!saved) {
+        Toast.show('Failed to save note. Please try again.', 'error');
+        AppLogger.error('[UI]', 'Note save failed — addNote returned null');
+        return;
+      }
+
       await UserRepository.trackEvent(this.externalId, 'cs_note_saved', {
         internal: this.isInternal,
         length:   content.length,
+        note_id:  saved.note_id,
       });
 
-      const note = new TimelineEvent({
-        id:        `note-${Date.now()}-${_noteIdCounter++}`,
-        type:      'agent_note',
-        channel:   'note',
-        timestamp: new Date().toISOString(),
-        sender:    'CS Agent',
-        content,
-        metadata:  { internal: this.isInternal },
-      });
+      const note = customerNoteToTimelineEvent(saved);
 
       if (body) body.innerHTML = '';
       Toast.show('Note saved successfully', 'success');
-      AppLogger.info('[UI]', 'Note saved', { internal: this.isInternal, length: content.length });
+      AppLogger.info('[UI]', 'Note saved', { internal: this.isInternal, length: content.length, note_id: saved.note_id });
       this.onNoteAdded(note);
 
     } catch (err) {
